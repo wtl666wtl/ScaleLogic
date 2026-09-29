@@ -1,6 +1,8 @@
 # Training scripts
 
-All paper experiments are launched through one parameterized script, `train.sh`, plus a handful of preset wrappers under `presets/` that fix the data file and a few size-specific knobs.
+Training launchers consist of one parameterized script, `train.sh`, plus preset wrappers under `presets/` that fix the data file and a few size-specific knobs. See the [project page](https://wtl666wtl.github.io/projects/scalelogic/) for the research overview and results.
+
+Run the examples below from the repository root. `train.sh` changes its working directory to `verl/`; use absolute paths for `TRAIN_FILE`, `VAL_FILE`, and any local `BASE_MODEL` directory. After generating a dataset in the repository root, set `DATA_DIR="$(pwd)"` when calling a preset. Without this override, presets look for data under `verl/data/`.
 
 ## Layout
 
@@ -28,8 +30,8 @@ for D in 8 12 16 20 24 28; do
         --total_edges ${EDGES} --depth ${D} --branches 4 \
         --num_persons 1 --p_forall 0.0 \
         --no_reuse --no_disjunction --no_negation
-    TRAIN_FILE=./search_logic_${EDGES}_${D}_4_1_0%forall_no_reuse_no_disjunction_no_negation_train.parquet \
-    VAL_FILE=./search_logic_${EDGES}_${D}_4_1_0%forall_no_reuse_no_disjunction_no_negation_test.parquet  \
+    TRAIN_FILE="$(pwd)/search_logic_${EDGES}_${D}_4_1_0%forall_no_reuse_no_disjunction_no_negation_train.parquet" \
+    VAL_FILE="$(pwd)/search_logic_${EDGES}_${D}_4_1_0%forall_no_reuse_no_disjunction_no_negation_test.parquet" \
     BASE_MODEL=Qwen/Qwen3-4B \
     WANDB_PROJECT=scalelogic-conjunction \
     bash verl/scripts/train.sh
@@ -51,15 +53,16 @@ export WANDB_API_KEY=...   # never commit this
 export WANDB_PROJECT=scalelogic
 ```
 
-If `WANDB_API_KEY` is unset the run will fall back to console-only logging.
+The launcher always enables both console and W&B logging. You can also authenticate with `wandb login`; leaving `WANDB_API_KEY` unset does not automatically switch to console-only logging.
 
 ## Resuming
 
 ```bash
-RUN_DIR=<your-run-dir>          # e.g. the auto-named local-<timestamp>-Qwen3-4B
+RUN_DIR=local-20260929-120000   # replace with the existing checkpoint directory name
+DATA_DIR="$(pwd)" \
 RESUME_CKPT_DIR=${RUN_DIR} \
-CHECKPOINT_DIR=./checkpoints/scalelogic/${RUN_DIR} \
+CHECKPOINT_DIR="$(pwd)/verl/checkpoints/scalelogic-quantification/${RUN_DIR}" \
 bash verl/scripts/presets/4B_quantification_D10_B4.sh
 ```
 
-(`train.sh` passes `trainer.resume_mode=auto` and looks for `latest_checkpointed_iteration.txt` under `CHECKPOINT_DIR`.)
+`train.sh` passes `trainer.resume_mode=auto` and looks for `latest_checkpointed_iteration.txt` under `CHECKPOINT_DIR`. The default checkpoint path is `verl/checkpoints/<WANDB_PROJECT>/<RUN_NAME>`; the `-Qwen3-4B` suffix is used for the W&B experiment name, not the checkpoint directory. `RESUME_CKPT_DIR` changes the experiment name; `CHECKPOINT_DIR` selects the checkpoint to resume.

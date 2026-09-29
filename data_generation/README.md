@@ -25,15 +25,17 @@ pip install datasets    # for parquet I/O via the HuggingFace `datasets` API
 
 ## Quick start
 
-Generate a dataset with branching factor `B = 4`, reasoning depth `D = 8`, total of `4 * 8 = 32` edges, 2 persons in the universe, "+ Quantification" setting, 1k train and 1k test samples:
+From the repository root, generate a dataset with branching factor `B = 4`, maximum reasoning depth `D = 8`, total of `4 * 8 = 32` edges, 2 persons in the universe, "+ Quantification" setting, 100k train and 1k test samples:
 
 ```bash
-python aug_generator.py \
+python data_generation/aug_generator.py \
     --n_train 100000 --n_test 1000 \
     --total_edges 32 --depth 8 --branches 4
 ```
 
-The filename pattern is `search_logic_<total_edges>_<depth>_<branches>_<num_persons>_<suffix>_{train,test}.parquet`.
+The files are written to the current directory. The filename pattern is `search_logic_<total_edges>_<depth>_<branches>_<num_persons>_<operator_tag>_{train,test}.parquet`, where `<operator_tag>` starts with the quantifier percentage (for example, `50%forall`), followed by disabled-operator flags and an optional `--suffix` tag.
+
+The command above produces `search_logic_32_8_4_2_50%forall_train.parquet` and `search_logic_32_8_4_2_50%forall_test.parquet`. For an interactive walkthrough of generated proofs, visit the [Proof Explorer](https://wtl666wtl.github.io/projects/scalelogic/#proof-explorer).
 
 ---
 
